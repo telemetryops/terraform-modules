@@ -127,8 +127,9 @@ resource "aws_api_gateway_integration" "endpoint_lambda" {
     for endpoint_path, config in var.endpoints : {
       for method in config.methods :
         "${endpoint_path}::${method}" => {
-          path   = endpoint_path
-          method = method
+          path              = endpoint_path
+          method            = method
+          lambda_invoke_arn = config.lambda_invoke_arn
         }
     }
   ]...)
@@ -139,7 +140,7 @@ resource "aws_api_gateway_integration" "endpoint_lambda" {
 
   integration_http_method = "POST"
   type                   = "AWS_PROXY"
-  uri                    = var.lambda_invoke_arn
+  uri                    = each.value.lambda_invoke_arn != null ? each.value.lambda_invoke_arn : var.lambda_invoke_arn
 }
 
 # Create CORS OPTIONS mock integrations

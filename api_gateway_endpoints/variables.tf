@@ -9,13 +9,15 @@ variable "root_resource_id" {
 }
 
 variable "lambda_invoke_arn" {
-  description = "The invoke ARN of the Lambda function to integrate with"
+  description = "The invoke ARN of the Lambda function to integrate with (used if lambda_invoke_arn not specified per-endpoint)"
   type        = string
+  default     = ""
 }
 
 variable "endpoints" {
   description = "Map of endpoint paths to their configuration"
   type = map(object({
+    lambda_invoke_arn  = optional(string)
     methods            = list(string)
     cors_allow_methods = string
   }))
