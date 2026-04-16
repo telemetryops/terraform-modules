@@ -10,7 +10,7 @@ locals {
   all_path_segments = flatten([
     for endpoint_path, config in var.endpoints : [
       for i in range(1, length(split("/", endpoint_path)) + 1) :
-        join("/", slice(split("/", endpoint_path), 0, i))
+      join("/", slice(split("/", endpoint_path), 0, i))
     ]
   ])
 
@@ -23,10 +23,10 @@ locals {
   segments_by_level = {
     for level in range(1, local.max_depth + 1) : level => {
       for segment in local.unique_path_segments :
-        segment => {
-          parent = length(split("/", segment)) == 1 ? null : join("/", slice(split("/", segment), 0, length(split("/", segment)) - 1))
-          part   = element(split("/", segment), length(split("/", segment)) - 1)
-        }
+      segment => {
+        parent = length(split("/", segment)) == 1 ? null : join("/", slice(split("/", segment), 0, length(split("/", segment)) - 1))
+        part   = element(split("/", segment), length(split("/", segment)) - 1)
+      }
       if length(split("/", segment)) == level
     }
   }
@@ -93,22 +93,28 @@ locals {
   )
 }
 
-# Create POST/GET/etc methods for each endpoint
+# Create POST/GET/etc methods for each endpoint.
+# When authorizer_id is set, the method uses authorization=CUSTOM and
+# requires every request to include an Authorization header that the
+# custom authorizer Lambda validates. When null (default), the method is
+# unauthenticated (authorization=NONE). OPTIONS preflight methods always
+# stay NONE regardless, so CORS works without a token.
 resource "aws_api_gateway_method" "endpoint_methods" {
   for_each = merge([
     for endpoint_path, config in var.endpoints : {
       for method in config.methods :
-        "${endpoint_path}::${method}" => {
-          path   = endpoint_path
-          method = method
-        }
+      "${endpoint_path}::${method}" => {
+        path   = endpoint_path
+        method = method
+      }
     }
   ]...)
 
   rest_api_id   = var.rest_api_id
   resource_id   = local.path_resource_ids[each.value.path]
   http_method   = each.value.method
-  authorization = "NONE"
+  authorization = var.authorizer_id == null ? "NONE" : "CUSTOM"
+  authorizer_id = var.authorizer_id
 }
 
 # Create OPTIONS methods for CORS on each endpoint
@@ -126,11 +132,11 @@ resource "aws_api_gateway_integration" "endpoint_lambda" {
   for_each = merge([
     for endpoint_path, config in var.endpoints : {
       for method in config.methods :
-        "${endpoint_path}::${method}" => {
-          path              = endpoint_path
-          method            = method
-          lambda_invoke_arn = config.lambda_invoke_arn
-        }
+      "${endpoint_path}::${method}" => {
+        path              = endpoint_path
+        method            = method
+        lambda_invoke_arn = config.lambda_invoke_arn
+      }
     }
   ]...)
 
@@ -139,8 +145,8 @@ resource "aws_api_gateway_integration" "endpoint_lambda" {
   http_method = aws_api_gateway_method.endpoint_methods[each.key].http_method
 
   integration_http_method = "POST"
-  type                   = "AWS_PROXY"
-  uri                    = each.value.lambda_invoke_arn != null ? each.value.lambda_invoke_arn : var.lambda_invoke_arn
+  type                    = "AWS_PROXY"
+  uri                     = each.value.lambda_invoke_arn != null ? each.value.lambda_invoke_arn : var.lambda_invoke_arn
 }
 
 # Create CORS OPTIONS mock integrations

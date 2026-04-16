@@ -34,3 +34,9 @@ variable "cors_allow_headers" {
   type        = string
   default     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
 }
+
+variable "authorizer_id" {
+  description = "Optional API Gateway custom authorizer ID. When set, every non-OPTIONS method uses authorization=CUSTOM with this authorizer. When null, methods are unprotected (authorization=NONE)."
+  type        = string
+  default     = null
+}
