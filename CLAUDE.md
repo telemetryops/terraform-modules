@@ -41,10 +41,7 @@ make push                               # Push current branch
 ## Deployment
 
 Deployments happen automatically via GitHub Actions:
-- Push to feature/* → deploys to dev account
-- Push/merge to dev → deploys to dev account
-- Push/merge to staging → deploys to staging account
-- Push/merge to prod → deploys to prod account
+- Push/merge to main → updates shared Terraform modules
 
 ## Infrastructure Patterns
 
