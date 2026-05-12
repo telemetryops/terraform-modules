@@ -27,6 +27,14 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_cloudwatch_log_group" "lambda" {
+  name              = "/aws/lambda/${var.function_name}"
+  retention_in_days = var.cloudwatch_log_retention_days
+  kms_key_id        = var.cloudwatch_log_kms_key_arn
+
+  tags = var.tags
+}
+
 # ECR permissions for Lambda to pull container images
 resource "aws_iam_role_policy" "lambda_ecr_access" {
   name = "${var.function_name}-ecr-policy"
@@ -103,5 +111,8 @@ resource "aws_lambda_function" "function" {
   }
 
   tags = var.tags
-}
 
+  depends_on = [
+    aws_cloudwatch_log_group.lambda
+  ]
+}

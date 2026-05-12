@@ -24,6 +24,14 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_cloudwatch_log_group" "lambda" {
+  name              = "/aws/lambda/${var.function_name}"
+  retention_in_days = var.cloudwatch_log_retention_days
+  kms_key_id        = var.cloudwatch_log_kms_key_arn
+
+  tags = var.tags
+}
+
 # Cross-account role assumption permissions
 resource "aws_iam_role_policy" "lambda_cross_account" {
   count = length(var.cross_account_role_arns) > 0 ? 1 : 0
@@ -96,6 +104,10 @@ resource "aws_lambda_function" "function" {
 
   tags = var.tags
 
+  depends_on = [
+    aws_cloudwatch_log_group.lambda
+  ]
+
   lifecycle {
     ignore_changes = [
       filename,
@@ -104,4 +116,3 @@ resource "aws_lambda_function" "function" {
     ]
   }
 }
-

@@ -21,6 +21,18 @@ variable "environment_variables" {
   default     = {}
 }
 
+variable "cloudwatch_log_kms_key_arn" {
+  description = "Optional KMS key ARN used to encrypt the Lambda CloudWatch Logs log group."
+  type        = string
+  default     = null
+}
+
+variable "cloudwatch_log_retention_days" {
+  description = "CloudWatch Logs retention period for the Lambda log group."
+  type        = number
+  default     = 90
+}
+
 variable "cross_account_role_arns" {
   description = "List of cross-account IAM role ARNs this Lambda can assume"
   type        = list(string)
