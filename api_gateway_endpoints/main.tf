@@ -106,7 +106,7 @@ resource "aws_api_gateway_method" "endpoint_methods" {
       "${endpoint_path}::${method}" => {
         path          = endpoint_path
         method        = method
-        authorizer_id = coalesce(config.authorizer_id, var.authorizer_id)
+        authorizer_id = config.authorizer_id != null ? config.authorizer_id : var.authorizer_id
       }
     }
   ]...)
