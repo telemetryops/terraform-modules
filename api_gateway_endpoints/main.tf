@@ -94,18 +94,19 @@ locals {
 }
 
 # Create POST/GET/etc methods for each endpoint.
-# When authorizer_id is set, the method uses authorization=CUSTOM and
-# requires every request to include an Authorization header that the
-# custom authorizer Lambda validates. When null (default), the method is
-# unauthenticated (authorization=NONE). OPTIONS preflight methods always
-# stay NONE regardless, so CORS works without a token.
+# When an endpoint authorizer_id is set, or the module-level authorizer_id is
+# set, the method uses authorization=CUSTOM. Endpoint settings take precedence
+# so a single API tree can mix public and protected routes under the same
+# parent resource. OPTIONS preflight methods always stay NONE regardless, so
+# CORS works without a token.
 resource "aws_api_gateway_method" "endpoint_methods" {
   for_each = merge([
     for endpoint_path, config in var.endpoints : {
       for method in config.methods :
       "${endpoint_path}::${method}" => {
-        path   = endpoint_path
-        method = method
+        path          = endpoint_path
+        method        = method
+        authorizer_id = coalesce(config.authorizer_id, var.authorizer_id)
       }
     }
   ]...)
@@ -113,8 +114,8 @@ resource "aws_api_gateway_method" "endpoint_methods" {
   rest_api_id   = var.rest_api_id
   resource_id   = local.path_resource_ids[each.value.path]
   http_method   = each.value.method
-  authorization = var.authorizer_id == null ? "NONE" : "CUSTOM"
-  authorizer_id = var.authorizer_id
+  authorization = each.value.authorizer_id == null ? "NONE" : "CUSTOM"
+  authorizer_id = each.value.authorizer_id
 }
 
 # Create OPTIONS methods for CORS on each endpoint

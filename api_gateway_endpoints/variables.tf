@@ -18,6 +18,7 @@ variable "endpoints" {
   description = "Map of endpoint paths to their configuration"
   type = map(object({
     lambda_invoke_arn  = optional(string)
+    authorizer_id      = optional(string)
     methods            = list(string)
     cors_allow_methods = string
   }))
@@ -36,7 +37,7 @@ variable "cors_allow_headers" {
 }
 
 variable "authorizer_id" {
-  description = "Optional API Gateway custom authorizer ID. When set, every non-OPTIONS method uses authorization=CUSTOM with this authorizer. When null, methods are unprotected (authorization=NONE)."
+  description = "Optional default API Gateway custom authorizer ID. Endpoints can override this with their own authorizer_id value. When no authorizer is set, methods are unprotected (authorization=NONE)."
   type        = string
   default     = null
 }

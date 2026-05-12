@@ -8,6 +8,11 @@ output "integration_ids" {
   value       = { for k, v in aws_api_gateway_integration.endpoint_lambda : k => v.id }
 }
 
+output "method_authorizer_ids" {
+  description = "Map of endpoint::method to the custom authorizer ID attached to that method, or null for public methods."
+  value       = { for k, v in aws_api_gateway_method.endpoint_methods : k => v.authorizer_id }
+}
+
 output "options_integration_ids" {
   description = "Map of endpoint paths to their OPTIONS integration IDs (for deployment dependencies)"
   value       = { for k, v in aws_api_gateway_integration_response.endpoint_options : k => v.id }
