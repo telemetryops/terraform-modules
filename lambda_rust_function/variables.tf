@@ -30,7 +30,7 @@ variable "vpc_config" {
   default = null
 
   validation {
-    condition = var.vpc_config == null || (
+    condition = var.vpc_config == null ? true : (
       length(var.vpc_config.subnet_ids) > 0 &&
       length(var.vpc_config.security_group_ids) > 0
     )
