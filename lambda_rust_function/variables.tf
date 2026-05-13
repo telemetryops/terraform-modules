@@ -21,6 +21,23 @@ variable "environment_variables" {
   default     = {}
 }
 
+variable "vpc_config" {
+  description = "Optional VPC configuration for private Lambda networking."
+  type = object({
+    subnet_ids         = list(string)
+    security_group_ids = list(string)
+  })
+  default = null
+
+  validation {
+    condition = var.vpc_config == null || (
+      length(var.vpc_config.subnet_ids) > 0 &&
+      length(var.vpc_config.security_group_ids) > 0
+    )
+    error_message = "vpc_config must include at least one subnet ID and one security group ID."
+  }
+}
+
 variable "cloudwatch_log_kms_key_arn" {
   description = "Optional KMS key ARN used to encrypt the Lambda CloudWatch Logs log group."
   type        = string

@@ -24,6 +24,13 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_vpc_execution" {
+  count = var.vpc_config == null ? 0 : 1
+
+  role       = aws_iam_role.lambda_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
 resource "aws_cloudwatch_log_group" "lambda" {
   name              = "/aws/lambda/${var.function_name}"
   retention_in_days = var.cloudwatch_log_retention_days
@@ -90,6 +97,15 @@ resource "aws_lambda_function" "function" {
   architectures = ["arm64"]
   memory_size   = var.memory_size
   timeout       = var.timeout
+
+  dynamic "vpc_config" {
+    for_each = var.vpc_config == null ? [] : [var.vpc_config]
+
+    content {
+      subnet_ids         = vpc_config.value.subnet_ids
+      security_group_ids = vpc_config.value.security_group_ids
+    }
+  }
 
   # Initial placeholder code - will be replaced by workflow deployment
   filename         = data.archive_file.lambda_zip.output_path
